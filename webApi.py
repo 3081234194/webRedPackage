@@ -7,12 +7,12 @@ import datetime
 """
 config区
 """
-username = "17346761312"#账号
+username = "18070406411"#账号
 password = "q2251682"#密码
-devType = "android_Xiaomi_MIX"#机型
+devType = "android_Xiaomi_MAX"#机型
 dev = "2ce3a938d7a506750b21f8b4d6926d09"#不变量,暂不知来源
 comId = "cO6UNKLe4NvJNgKBuAVEtA=="#不变量,a101经AES加密而来
-sys = "8.0.0"#安卓系统版本
+sys = "8.1.0"#安卓系统版本
 sysVer = "91"#软件版本号
 sessionID = 0#用户唯一标识,服务器返回
 auth_sign = 0#获取包状态及抢包的sign
@@ -25,8 +25,8 @@ def main():
     while True:
         local_time = int(time.time()*1000)
         num = target_time-local_time
-        #print("相差时间:%s" %num)
-        if flag==0 and num<100000:
+        print("相差时间:%s" %num)
+        if flag==0 and num<=300000:
             flag=1
             target_time = getTime(roomId)
         if num<=-1:#抢包开始
@@ -41,7 +41,7 @@ def main():
         if(num<40000):sleep_time=3
         if(num<=5000):sleep_time=0.002
         if(num>60000):sleep_time=29
-        #print("本轮等待时间:%s" %sleep_time)
+        print("本轮等待时间:%s" %sleep_time)
         time.sleep(sleep_time)
 #登陆
 def loginIn(username,password):
@@ -156,7 +156,7 @@ def getTime(roomid):
         target_time = res_json["body"]["ti"]#获取服务器上目标时间
         target_time = time.strptime(target_time, "%Y-%m-%d %H:%M:%S")#分割成结构体
         target_time = int(time.mktime(target_time)*1000)+local_ms#转换成时间戳
-        target_time = target_time+(local_time+int(res.elapsed.total_seconds()*1000)-post_time)#校准目标时间
+        target_time = target_time+(local_time-post_time+int(res.elapsed.total_seconds()*1000*0.8))#校准目标时间
         print("校准后的目标时间%s" %target_time)
         return target_time
     else:
@@ -172,6 +172,9 @@ def getRoomId(anchorId):
     if res.status_code==200:
         res_json = json.loads(res.text)
         if res_json["resMsg"]["resCode"]=="0000":
+            #print(res_json)
+            wallet = int(res_json["body"]["um"]["ex"])/100
+            print("\033[30;43m钱包余额%s\033[0m" %wallet)
             print("进入%s的房间,房间号:%s" %(res_json["body"]["am"]["nn"],res_json["body"]["am"]["ri"]))
             return res_json["body"]["am"]["ri"]
     else:
@@ -184,7 +187,20 @@ def getRedPackets(roomid):
     post_data = {"devType":devType,"dev":dev,"actId":"7","sign":auth_sign,"sysVer":sysVer,"sessionID":sessionID,"comId":comId,"sys":sys,"roomId":roomid}
     headers = {"User-Agent":"okhttp/3.12.0"}
     res = requests.post(url=url,data=post_data,headers=headers)
-    print(res.text)
+    if res.status_code ==200:
+        res_json = json.loads(res.text)
+        if res_json["resMsg"]["resCode"]=="0000":
+            if res_json["body"]["su"]=="1":
+                money = int(res_json["body"]["am"])/100
+                print("抢到红包了,金额:%f" %money)
+            else:
+                print("未抢到红包,状态码:%s" %res_json["body"]["su"])
+                print(res_json)
+        else:
+            print("抢包失败,服务器返回信息:%s" %res_json["resMsg"]["resDesc"])
+    else:
+        print("抢包失败,检查网络")
+        print(res.text)
 #获取视频列表决定进入人数排序的哪一个房间
 def getInRoom(index=0):
     global roomId
