@@ -17,7 +17,11 @@ sysVer = "91"#软件版本号
 sessionID = 0#用户唯一标识,服务器返回
 auth_sign = 0#获取包状态及抢包的sign
 roomId = 0#
+get_num = 0#抢红包有效次数
+total_num = 0#抢红包总次数
+total_money = 0#抢到的总金额
 def main():
+    global total_num
     loginIn(username,password)
     getInRoom(1)
     target_time = getTime(roomId)
@@ -31,8 +35,10 @@ def main():
             target_time = getTime(roomId)
         if num<=-1:#抢包开始
             getRedPackets(roomId)
+            total_num = total_num+1
             flag = 0                                                                                       
             print("当前时间%s" %datetime.datetime.now())
+            print("\033[30;43m抢包总次数:%s，有效次数:%s，抢到总金额:%s\033[0m" %(total_num,get_num,total_money))
             time.sleep(50*60 )
             print("下一次抢包循环")
             getInRoom(1)
@@ -188,6 +194,7 @@ def getRoomId(anchorId):
         return getRoomId(anchorId)
 #获取红包
 def getRedPackets(roomid):
+    global total_money,get_num
     url = "https://redpacket.tjfzys.com//activity/getRedPackets.do"
     post_data = {"devType":devType,"dev":dev,"actId":"7","sign":auth_sign,"sysVer":sysVer,"sessionID":sessionID,"comId":comId,"sys":sys,"roomId":roomid}
     headers = {"User-Agent":"okhttp/3.12.0"}
@@ -197,7 +204,9 @@ def getRedPackets(roomid):
         if res_json["resMsg"]["resCode"]=="0000":
             if res_json["body"]["su"]=="1":
                 money = int(res_json["body"]["am"])/100
-                print("抢到红包了,金额:%f" %money)
+                total_money = total_money+money
+                get_num = get_num+1
+                print("\033[30;43m抢到红包了,金额:%s\033[0m" %money)
             else:
                 print("未抢到红包,状态码:%s" %res_json["body"]["su"])
                 print(res_json)
