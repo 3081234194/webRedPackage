@@ -144,24 +144,29 @@ def getTime(roomid):
     post_data = {"devType":devType,"dev":dev,"actId":"7","sign":auth_sign,"sysVer":sysVer,"sessionID":sessionID,"comId":comId,"sys":sys,"roomId":roomid}
     headers = {"User-Agent":"okhttp/3.12.0"}
     res = requests.post(url=url,data=post_data,headers=headers)
-    print(res.text)
-    res_json = json.loads(res.text)
-    print("本次请求所用时间%dms" %int(res.elapsed.total_seconds()*1000))
-    if res_json["resMsg"]["resCode"]=="0000":
-        str = res_json["resNum"]#获取请求时的服务器时间
-        local_ms = int(str[14:17])*10#保存ms数
-        str = str[0:4]+"-"+str[4:6]+"-"+str[6:8]+" "+str[8:10]+":"+str[10:12]+":"+str[12:14]#转换格式
-        str = time.strptime(str, "%Y-%m-%d %H:%M:%S")#分割成结构体
-        post_time = int(time.mktime(str)*1000)+local_ms#转换成时间戳
-        target_time = res_json["body"]["ti"]#获取服务器上目标时间
-        target_time = time.strptime(target_time, "%Y-%m-%d %H:%M:%S")#分割成结构体
-        target_time = int(time.mktime(target_time)*1000)+local_ms#转换成时间戳
-        target_time = target_time+(local_time-post_time+int(res.elapsed.total_seconds()*1000*0.8))#校准目标时间
-        print("校准后的目标时间%s" %target_time)
-        return target_time
+    #print(res.text)
+    if res.status_code=="200":
+        res_json = json.loads(res.text)
+        print("本次请求所用时间%dms" %int(res.elapsed.total_seconds()*1000))
+        if res_json["resMsg"]["resCode"]=="0000":
+            str = res_json["resNum"]#获取请求时的服务器时间
+            local_ms = int(str[14:17])*10#保存ms数
+            str = str[0:4]+"-"+str[4:6]+"-"+str[6:8]+" "+str[8:10]+":"+str[10:12]+":"+str[12:14]#转换格式
+            str = time.strptime(str, "%Y-%m-%d %H:%M:%S")#分割成结构体
+            post_time = int(time.mktime(str)*1000)+local_ms#转换成时间戳
+            target_time = res_json["body"]["ti"]#获取服务器上目标时间
+            target_time = time.strptime(target_time, "%Y-%m-%d %H:%M:%S")#分割成结构体
+            target_time = int(time.mktime(target_time)*1000)+local_ms#转换成时间戳
+            target_time = target_time+(local_time-post_time+int(res.elapsed.total_seconds()*1000*0.8))#校准目标时间
+            print("校准后的目标时间%s" %target_time)
+            return target_time
+        else:
+            print("请求服务器红包状态出错")
+            print(res_json)
     else:
-        print("请求服务器红包状态出错")
-        print(res_json)
+        print("请求时间失败,等待3S后重试")
+        time.sleep(3)
+        return getTime(roomid)
 #获取房间id
 def getRoomId(anchorId):
     sign = createSign(anchorId=anchorId)
