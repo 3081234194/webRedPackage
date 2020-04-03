@@ -144,8 +144,8 @@ def getTime(roomid):
     post_data = {"devType":devType,"dev":dev,"actId":"7","sign":auth_sign,"sysVer":sysVer,"sessionID":sessionID,"comId":comId,"sys":sys,"roomId":roomid}
     headers = {"User-Agent":"okhttp/3.12.0"}
     res = requests.post(url=url,data=post_data,headers=headers)
-    #print(res.text)
-    if res.status_code=="200":
+    print(res.text)
+    if res.status_code==200:
         res_json = json.loads(res.text)
         print("本次请求所用时间%dms" %int(res.elapsed.total_seconds()*1000))
         if res_json["resMsg"]["resCode"]=="0000":
@@ -192,7 +192,7 @@ def getRedPackets(roomid):
     post_data = {"devType":devType,"dev":dev,"actId":"7","sign":auth_sign,"sysVer":sysVer,"sessionID":sessionID,"comId":comId,"sys":sys,"roomId":roomid}
     headers = {"User-Agent":"okhttp/3.12.0"}
     res = requests.post(url=url,data=post_data,headers=headers)
-    if res.status_code ==200:
+    if res.status_code==200:
         res_json = json.loads(res.text)
         if res_json["resMsg"]["resCode"]=="0000":
             if res_json["body"]["su"]=="1":
